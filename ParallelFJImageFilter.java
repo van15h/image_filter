@@ -20,19 +20,19 @@ public class ParallelFJImageFilter {
   }
 
   public void apply(int nthreads) {
+    // create thread pool
+    ForkJoinPool pool = new ForkJoinPool(nthreads);
     // 100 filter applies
     for (int steps = 0; steps < NRSTEPS; steps++) {
-      // create thread pool
-      ForkJoinPool pool = new ForkJoinPool(nthreads);
       // start recursive task creation
-      pool.invoke(new JoinForkWorker(1, height-1));
+      pool.invoke(new JoinForkWorker(1, height - 1));
       // swap arrays
       int[] help;
       help = src;
       src = dst;
       dst = help;
-      pool.shutdown();
     }
+    pool.shutdown();
   }
 
   class JoinForkWorker extends RecursiveAction {
@@ -48,13 +48,13 @@ public class ParallelFJImageFilter {
     @Override
     protected void compute() {
       // when to stop recursion
-      if (end-start <= THRESHOLD) {
+      if (end - start <= THRESHOLD) {
         computeDirectly();
         return;
       }
       // splitting task into two
-      invokeAll(new JoinForkWorker(start, start + (end-start) / 2),
-          new JoinForkWorker(start + (end-start) / 2, end));
+      invokeAll(new JoinForkWorker(start, start + (end - start) / 2),
+          new JoinForkWorker(start + (end - start) / 2, end));
     }
 
     private void computeDirectly() {
